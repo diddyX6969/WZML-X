@@ -1,55 +1,61 @@
-# Use Python 3.10 on Debian Buster slim image
-FROM python:3.10-slim-buster
+# Use Ubuntu 24.04 (Noble Numbat) as the base image
+FROM ubuntu:24.04
 
-# Set environment variables to prevent interactive prompts during installs
+# Set environment variables to prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Kolkata
 
-# 1. Install system dependencies required by WZML-X
-# (ffmpeg, aria2, p7zip, curl, git, etc.)
+# Update apt and install essential build tools and dependencies
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
     git \
-    ffmpeg \
-    aria2 \
     wget \
     curl \
     pv \
     jq \
-    tar \
-    xz-utils \
+    ffmpeg \
+    aria2 \
+    qbittorrent-nox \
     p7zip-full \
-    unzip \
     libcurl4-openssl-dev \
     libssl-dev \
+    libc-ares-dev \
+    libsodium-dev \
+    libcrypto++-dev \
+    libsqlite3-dev \
+    libfreeimage-dev \
     locales \
-    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
-    && locale-gen \
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update \
+    && apt-get install -y \
+    python3.13 \
+    python3.13-dev \
+    python3.13-venv \
+    python3.13-distutils \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install Rclone (Latest Version)
-# WZML-X uses rclone for cloud uploads
-RUN curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip && \
-    unzip rclone-current-linux-amd64.zip && \
-    cp rclone-*-linux-amd64/rclone /usr/bin/ && \
-    chown root:root /usr/bin/rclone && \
-    chmod 755 /usr/bin/rclone && \
-    rm -rf rclone-*
+# Set up Python 3.13 as the default 'python3' and 'python'
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 
-# 3. Set the working directory
-WORKDIR /usr/src/app
+# Install pip for Python 3.13
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.13
 
-# 4. Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Install rclone (required for cloud uploads)
+RUN curl https://rclone.org/install.sh | bash
 
-# 5. Copy the rest of the application code
-COPY . .
+# Clone the repository (wzv3 branch)
+RUN git clone -b wzv3 https://github.com/SilentDemonSD/WZML-X.git /app
 
-# 6. Ensure the start script is executable
+# Add Workdir as requested
+WORKDIR /app
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Ensure the start script is executable
 RUN chmod +x start.sh
 
-# 7. Expose ports (Optional, but good practice for Railway's health checks)
-# WZML-X usually runs a web server on port 80 or 8080 for status/token
-EXPOSE 80 8080
-
-# 8. Start the bot
+# Start the bot
 CMD ["bash", "start.sh"]
