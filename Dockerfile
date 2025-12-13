@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install dependencies and Python 3.11 (Most stable for this bot)
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     software-properties-common \
     git \
@@ -32,18 +32,18 @@ RUN apt-get update && apt-get install -y \
     python3.11 \
     python3.11-dev \
     python3.11-venv \
-    # removed python3-distutils because it is built-in or unnecessary for 3.11+
+    python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up Python environment
-ENV PYTHONUNBUFFERED=1
-RUN ln -s /usr/bin/python3.11 /usr/bin/python3 && \
-    ln -s /usr/bin/python3.11 /usr/bin/python
+# Fix Python Symlinks (Force overwrite using -sf)
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python
 
 # Copy requirements and install them
 COPY requirements.txt .
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
+# Upgrade pip and install requirements
+RUN python3 -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
