@@ -1,4 +1,4 @@
-# Use the Official Prebuilt Image (Contains all dependencies pre-installed)
+# Use the Official Prebuilt Image
 FROM anasty17/mltb:latest
 
 # Set the working directory
@@ -8,14 +8,12 @@ WORKDIR /usr/src/app
 COPY . .
 
 # --- FIX FOR "STORMTORRENT" ERROR ---
-# This creates a "fake" stormtorrent that points to the real qbittorrent
-# This tricks your bot into thinking stormtorrent exists.
+# Creates a fake stormtorrent that points to the real qbittorrent-nox
 RUN ln -sf /usr/bin/qbittorrent-nox /usr/bin/stormtorrent
-# ------------------------------------
 
-# Install Python Requirements
-# (We use --ignore-installed to prevent conflicts with pre-installed packages)
-RUN pip install --no-cache-dir --ignore-installed -r requirements.txt
+# --- FIX FOR "EXTERNALLY MANAGED ENVIRONMENT" ---
+# Added --break-system-packages to force the install
+RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Give permission to run scripts
 RUN chmod +x start.sh
