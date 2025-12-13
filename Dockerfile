@@ -1,11 +1,12 @@
-# Use Ubuntu 24.04 (Noble Numbat) as the base image
-FROM ubuntu:24.04
+FROM ubuntu:22.04
 
-# Set environment variables to prevent interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Kolkata
+# Fix non-interactive installation
+ARG DEBIAN_FRONTEND=noninteractive
 
-# Update apt and install essential build tools and dependencies
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Install dependencies and Python 3.11 (Most stable for this bot)
 RUN apt-get update && apt-get install -y \
     software-properties-common \
     git \
@@ -28,34 +29,27 @@ RUN apt-get update && apt-get install -y \
     && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install -y \
-    python3.13 \
-    python3.13-dev \
-    python3.13-venv \
-    python3.13-distutils \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    # removed python3-distutils because it is built-in or unnecessary for 3.11+
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up Python 3.13 as the default 'python3' and 'python'
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
+# Set up Python environment
+ENV PYTHONUNBUFFERED=1
+RUN ln -s /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -s /usr/bin/python3.11 /usr/bin/python
 
-# Install pip for Python 3.13
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.13
+# Copy requirements and install them
+COPY requirements.txt .
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Install rclone (required for cloud uploads)
-RUN curl https://rclone.org/install.sh | bash
-
-# Clone the repository (wzv3 branch)
-RUN git clone -b wzv3(v1) https://https://github.com/diddyX6969/WZML-X.git /app
-
-WORKDIR /usr/src/app
+# Copy the rest of the application
 COPY . .
-# This copies the 'bot' folder directly into /usr/src/app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Ensure the start script is executable
+# Set permissions for the start script
 RUN chmod +x start.sh
 
 # Start the bot
