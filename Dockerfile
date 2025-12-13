@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install dependencies
+# Install dependencies and standard qbittorrent
 RUN apt-get update && apt-get install -y \
     software-properties-common \
     git \
@@ -48,10 +48,13 @@ RUN python3 -m pip install --upgrade pip && \
 # Copy the rest of the application
 COPY . .
 
-# --- FIX FOR STORM TORRENT ERROR ---
-# This gives permission to run 'stormtorrent' and any other scripts in your folder
+# --- FIX FOR MISSING STORMTORRENT ---
+# This creates a link: When bot calls 'stormtorrent', it runs 'qbittorrent-nox' instead.
+RUN ln -sf /usr/bin/qbittorrent-nox /usr/src/app/stormtorrent
+# ------------------------------------
+
+# Set Permissions
 RUN chmod -R 777 /usr/src/app
-# -----------------------------------
 
 # Start the bot
 CMD ["bash", "start.sh"]
