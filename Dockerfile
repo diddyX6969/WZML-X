@@ -46,10 +46,11 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.13
 RUN curl https://rclone.org/install.sh | bash
 
 # Clone the repository (wzv3 branch)
-RUN git clone -b wzv3 https://github.com/SilentDemonSD/WZML-X.git /app
+RUN git clone -b wzv3(v1) https://https://github.com/diddyX6969/WZML-X.git /app
 
-# Add Workdir as requested
-WORKDIR /app
+WORKDIR /usr/src/app
+COPY . .
+# This copies the 'bot' folder directly into /usr/src/app
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
