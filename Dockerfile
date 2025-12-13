@@ -36,21 +36,22 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Fix Python Symlinks (Force overwrite using -sf)
+# Fix Python Symlinks
 RUN ln -sf /usr/bin/python3.11 /usr/bin/python3 && \
     ln -sf /usr/bin/python3.11 /usr/bin/python
 
 # Copy requirements and install them
 COPY requirements.txt .
-# Upgrade pip and install requirements
 RUN python3 -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
 
-# Set permissions for the start script
-RUN chmod +x start.sh
+# --- FIX FOR STORM TORRENT ERROR ---
+# This gives permission to run 'stormtorrent' and any other scripts in your folder
+RUN chmod -R 777 /usr/src/app
+# -----------------------------------
 
 # Start the bot
 CMD ["bash", "start.sh"]
