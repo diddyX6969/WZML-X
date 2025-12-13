@@ -127,6 +127,9 @@ RCLONE_SERVE_PASS = ""
 JD_EMAIL = ""
 JD_PASS = ""
 
+# Real-Debrid
+REAL_DEBRID_API = "YOUR_REAL_DEBRID_API_TOKEN_HERE"
+
 # Sabnzbd
 USENET_SERVERS = [
     {
